@@ -1,0 +1,134 @@
+kube-prometheus-stack:
+  prometheus:
+    prometheusSpec:
+      ## Do not modify `podMonitorSelectorNilUsesHelmValues`
+      podMonitorSelectorNilUsesHelmValues: false
+      ## set remoteWrite configuration for sending metrics to a backend that supports Prometheus remote write
+      ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#remotewritespec
+      ## example for New Relic
+      ##
+      # remoteWrite:
+      # - url: https://metric-api.newrelic.com/prometheus/v1/write?prometheus_server=kafka-connect-sandbox
+      #   bearerToken: xxxxxxxxxxxxxxxxxxxxxxx
+    ingress:
+      enabled: false
+      ## IngressClassName for Prometheus Ingress.
+      ## Should be provided if Ingress is enable.
+      # ingressClassName: nginx
+      annotations: {}
+      labels: {}
+
+      ## Hostnames.
+      ## Must be provided if Ingress is enabled.
+      # hosts:
+      #   - prometheus.domain.com
+      hosts: []
+
+      ## Paths to use for ingress rules - one path should match the prometheusSpec.routePrefix
+      ##
+      paths: []
+      # - /
+
+      ## For Kubernetes >= 1.18 you should specify the pathType (determines how Ingress paths should be matched)
+      ## See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#better-path-matching-with-path-types
+      # pathType: ImplementationSpecific
+
+      ## TLS configuration for Prometheus Ingress
+      ## Secret must be manually created in the namespace
+      ##
+      tls: []
+        # - secretName: prometheus-general-tls
+        #   hosts:
+        #     - prometheus.example.com
+    
+
+  grafana:
+    ## Set to false if you're using an external monitoring tool and do not need Grafana through helm
+    enabled: false
+    adminPassword: platformatory
+    ## Do not delete `connect: connect-dashboard`
+    dashboardsConfigMaps:
+      connect: connect-dashboard
+
+    ingress:
+      ## If true, Grafana Ingress will be created
+      enabled: false
+
+      ## IngressClassName for Grafana Ingress.
+      ## Should be provided if Ingress is enable.
+      # ingressClassName: nginx
+
+      ## Annotations for Grafana Ingress
+      annotations: {}
+        # kubernetes.io/ingress.class: nginx
+        # kubernetes.io/tls-acme: "true"
+
+      ## Labels to be added to the Ingress
+      labels: {}
+
+      ## Hostnames.
+      ## Must be provided if Ingress is enable.
+      # hosts:
+      #   - grafana.domain.com
+      hosts: []
+
+      ## Path for grafana ingress
+      path: /
+
+      ## TLS configuration for grafana Ingress
+      ## Secret must be manually created in the namespace or using cert-manager
+      tls: []
+      # - secretName: grafana-general-tls
+      #   hosts:
+      #   - grafana.example.com
+
+connect:
+  ## Required
+  workerCount: 1
+  ## If a custom image is provided, ensure the connector jars are loaded into /opt/kafka/plugins
+  ## Required
+  image: quay.io/strimzi/kafka:latest-kafka-3.3.1
+  ## ref: https://strimzi.io/docs/operators/latest/configuring.html#property-kafka-connect-config-reference
+  ## Required
+  config:
+    group.id: connect-sandbox
+    offset.storage.topic: _offsets-sb
+    config.storage.topic: _configs-sb
+    status.storage.topic: _status-sb
+    config.storage.replication.factor: -1
+    offset.storage.replication.factor: -1
+    status.storage.replication.factor: -1
+    topic.creation.enable: "true"
+  ## ref: https://strimzi.io/docs/operators/latest/configuring.html#type-Build-reference
+  ## Ensure the secretName defined, is always `registry-cred`
+  build:
+    # output:
+    #   type: docker
+    #   image: my-registry.io/my-org/my-connect-cluster:latest
+    #   pushSecret: registry-cred # Ensure the secretName defined
+    # plugins:
+    #   - name: debezium-postgres-connector
+    #     artifacts:
+    #       - type: tgz
+    #         url: https://repo1.maven.org/maven2/io/debezium/debezium-connector-postgres/2.1.1.Final/debezium-connector-postgres-2.1.1.Final-plugin.tar.gz
+    #         sha512sum: 962a12151bdf9a5a30627eebac739955a4fd95a08d373b86bdcea2b4d0c27dd6e1edd5cb548045e115e33a9e69b1b2a352bee24df035a0447cb820077af00c03
+
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  pushSecretData: {}
+
+kafkaCluster:
+  ## Required
+  bootstrapServers: broker:9092
+  ## ref: https://strimzi.io/docs/operators/latest/configuring.html#type-KafkaClientAuthenticationTls-reference
+  ## Ensure the secretName defined, if any, is always `broker-auth`
+  authentication:
+    type: plain
+    username: user
+    passwordSecret:
+      secretName: broker-auth
+      password: password
+  authenticationSecretData:
+    password: YnJva2VycGFzc3dvcmQ=
+  ## ref: https://strimzi.io/docs/operators/latest/configuring.html#type-ClientTls-schema-reference
+  tls:
+    trustedCertificates: []

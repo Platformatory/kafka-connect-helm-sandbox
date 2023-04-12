@@ -1,0 +1,29 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnect
+metadata:
+  name: connectcluster
+  annotations:
+    strimzi.io/use-connector-resources: "true"   
+spec:
+  version: 3.3.2
+  replicas: {{ .Values.connect.workerCount }}
+  bootstrapServers: {{ .Values.kafkaCluster.bootstrapServers }}
+  authentication:
+{{ toYaml .Values.kafkaCluster.authentication | indent 4 }}
+  tls:
+{{ toYaml .Values.kafkaCluster.tls | indent 4 }}
+  image: {{ .Values.connect.image }}
+  metricsConfig: 
+    type: jmxPrometheusExporter
+    valueFrom:
+      configMapKeyRef:
+        name: prometheus-config-map
+        key: prometheus-key
+  logging:
+    type: inline
+    loggers:
+      log4j.rootLogger: "INFO"
+  build:
+{{ toYaml .Values.connect.build | indent 4 }}
+  config:
+{{ toYaml .Values.connect.config | indent 4 }}
