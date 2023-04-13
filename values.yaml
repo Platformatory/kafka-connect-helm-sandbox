@@ -44,7 +44,7 @@ kube-prometheus-stack:
 
   grafana:
     ## Set to false if you're using an external monitoring tool and do not need Grafana through helm
-    enabled: false
+    enabled: true
     adminPassword: platformatory
     ## Do not delete `connect: connect-dashboard`
     dashboardsConfigMaps:
@@ -115,6 +115,17 @@ connect:
 
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
   pushSecretData: {}
+
+connectors: []
+  ## Array of connectors (must include name and spec for each item)
+  # - name: jdbc-source
+  ## Ref: https://strimzi.io/docs/operators/latest/configuring.html#type-KafkaConnectorSpec-reference
+  #   spec:
+  #     class: io.confluent.connect.jdbc.JdbcSourceConnector
+  #     tasksMax: 3
+  #     autoRestart:	
+  #       enabled: true
+  #     config:
 
 kafkaCluster:
   ## Required

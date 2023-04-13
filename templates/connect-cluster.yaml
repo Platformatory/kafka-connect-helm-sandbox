@@ -12,7 +12,7 @@ spec:
 {{ toYaml .Values.kafkaCluster.authentication | indent 4 }}
   tls:
 {{ toYaml .Values.kafkaCluster.tls | indent 4 }}
-  image: {{ .Values.connect.image }}
+  image: {{ default "quay.io/strimzi/kafka:latest-kafka-3.3.1" .Values.connect.image }}
   metricsConfig: 
     type: jmxPrometheusExporter
     valueFrom:
