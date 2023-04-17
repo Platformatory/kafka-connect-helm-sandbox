@@ -114,6 +114,10 @@ connect:
     offset.storage.replication.factor: -1
     status.storage.replication.factor: -1
     topic.creation.enable: "true"
+  logging:
+    type: inline
+    loggers:
+      log4j.rootLogger: "INFO"
   ## ref: https://strimzi.io/docs/operators/latest/configuring.html#type-Build-reference
   build:
     # output:
