@@ -82,10 +82,25 @@ kube-prometheus-stack:
       #   hosts:
       #   - grafana.example.com
 
+
+## Uncomment strimzi-kafka-operator.image.imagePullSecrets if you're using a private image for connect
+# strimzi-kafka-operator:
+#   image:
+#     imagePullSecrets: private-image-pull
+
+## Define the image pull secret content in the following section
+## Required if strimzi-kafka-operator.image.imagePullSecrets is defined
+# imageCredentials:
+#   registry: quay.io
+#   username: someone
+#   password: sillyness
+
+
 connect:
   ## Required
   workerCount: 1
   ## If a custom image is provided, ensure the connector jars are loaded into /opt/kafka/plugins
+  ## If you're using a private image, ensure strimzi-kafka-operator.image.imagePullSecrets is defined and imageCredentials is defined
   ## Required
   image: quay.io/strimzi/kafka:latest-kafka-3.3.1
   ## ref: https://strimzi.io/docs/operators/latest/configuring.html#property-kafka-connect-config-reference
@@ -100,12 +115,11 @@ connect:
     status.storage.replication.factor: -1
     topic.creation.enable: "true"
   ## ref: https://strimzi.io/docs/operators/latest/configuring.html#type-Build-reference
-  ## Ensure the secretName defined, is always `registry-cred`
   build:
     # output:
     #   type: docker
     #   image: my-registry.io/my-org/my-connect-cluster:latest
-    #   pushSecret: registry-cred # Ensure the secretName defined
+    #   pushSecret: registry-cred
     # plugins:
     #   - name: debezium-postgres-connector
     #     artifacts:
@@ -114,7 +128,11 @@ connect:
     #         sha512sum: 962a12151bdf9a5a30627eebac739955a4fd95a08d373b86bdcea2b4d0c27dd6e1edd5cb548045e115e33a9e69b1b2a352bee24df035a0447cb820077af00c03
 
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-  pushSecretData: {}
+  ## Required if connect.build is defined
+  pushSecretData:
+      # registry: quay.io
+      # username: someone
+      # password: sillyness
 
 connectors: []
   ## Array of connectors (must include name and spec for each item)
@@ -123,7 +141,7 @@ connectors: []
   #   spec:
   #     class: io.confluent.connect.jdbc.JdbcSourceConnector
   #     tasksMax: 3
-  #     autoRestart:	
+  #     autoRestart:
   #       enabled: true
   #     config:
 
@@ -140,6 +158,6 @@ kafkaCluster:
       password: password
   authenticationSecretData:
     password: YnJva2VycGFzc3dvcmQ=
-  ## ref: https://strimzi.io/docs/operators/latest/configuring.html#type-ClientTls-schema-reference
+  ## ref: https://strimzi.io/docs/operators/latest/configuring.html#con-common-configuration-trusted-certificates-reference
   tls:
     trustedCertificates: []
